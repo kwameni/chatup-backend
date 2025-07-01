@@ -1,0 +1,55 @@
+
+services:
+  postgres:
+    image: postgres:${SOFTWARE_VERSION_TAG}
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${SOFTWARE_PASSWORD}
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+
+  pgadmin4:
+    image: elestio/pgadmin:${SOFTWARE_VERSION_TAG}
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${ADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${ADMIN_PASSWORD}
+      PGADMIN_LISTEN_PORT: 8080
+    ports:
+      - "8090:8080"
+    volumes:
+      - ./servers.json:/pgadmin4/servers.json
+
+  api:
+    build: ./api
+    container_name: chatup_backend 
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${SOFTWARE_PASSWORD}
+      POSTGRES_HOST: postgres
+      HOST: ${HOST}
+      DB_DIALECT: ${DB_DIALECT}
+      DB_PORT: ${DB_PORT}
+      PORT: ${API_PORT}
+    depends_on:
+      - postgres
+    ports:
+      - "${API_PORT}:3000"
+
+  web:
+    image: nginx:alpine
+    container_name: chatup_frontend
+    volumes:
+      - ${NGINX_VOLUME}
+    ports:
+      - "${NGINX_PORT}:80"
+    depends_on:
+      - api
+volumes:
+  pgdata: 

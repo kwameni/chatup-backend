@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chat Up – Sign Up</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.4/css/bulma.min.css">
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
+  <style>
+    body {
+      background-color: #f7f7f7;
+    }
+
+    .form-container {
+      max-width: 400px;
+      margin: 5rem auto;
+      padding: 2rem;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+
+    .title {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: #363636;
+    }
+
+    .input {
+      font-size: 0.9rem;
+      height: 2.3em;
+    }
+
+    .button.is-success {
+      width: 100%;
+    }
+
+    .field:not(:last-child) {
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="form-container">
+    <h2 class="title is-4">Join Chat Up</h2>
+
+    <form id="signupForm" autocomplete="off">
+      <div class="field">
+        <p class="control has-icons-left">
+          <input class="input" type="text" id="firstName" placeholder="First name" required maxlength="30">
+          <span class="icon is-small is-left"><i class="fas fa-user"></i></span>
+        </p>
+      </div>
+
+      <div class="field">
+        <p class="control has-icons-left">
+          <input class="input" type="text" id="lastName" placeholder="Last name" required maxlength="30">
+          <span class="icon is-small is-left"><i class="fas fa-user-tag"></i></span>
+        </p>
+      </div>
+
+      <div class="field">
+        <p class="control has-icons-left">
+          <input class="input" type="email" id="email" placeholder="Email" required maxlength="50" autocomplete="email">
+          <span class="icon is-small is-left"><i class="fas fa-envelope"></i></span>
+        </p>
+      </div>
+
+      <div class="field">
+        <p class="control has-icons-left">
+          <input class="input" type="password" id="password" placeholder="Password" required maxlength="64" autocomplete="new-password">
+          <span class="icon is-small is-left"><i class="fas fa-lock"></i></span>
+        </p>
+      </div>
+
+      <div class="field">
+        <p class="control">
+          <button type="submit" class="button is-success">Sign Up</button>
+        </p>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('signupForm');
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    function sanitizeInput(value) {
+      return value.replace(/[<>"']/g, '');
+    }
+
+    function isEmailValid(email) {
+      const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return regex.test(email);
+    }
+
+    let cooldown = false;
+
+    document.getElementById('password').addEventListener('paste', e => {
+      e.preventDefault();
+      alert("Copier-coller désactivé pour ce champ.");
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      if (cooldown) return;
+      cooldown = true;
+      setTimeout(() => cooldown = false, 2000);
+
+      const firstName = sanitizeInput(document.getElementById('firstName').value.trim());
+      const lastName = sanitizeInput(document.getElementById('lastName').value.trim());
+      const email = sanitizeInput(document.getElementById('email').value.trim());
+      const password = document.getElementById('password').value;
+
+      if (!firstName || !lastName || !email || !password) {
+        alert("Tous les champs sont obligatoires.");
+        return;
+      }
+
+      if (!isEmailValid(email)) {
+        alert("Adresse email invalide.");
+        return;
+      }
+
+      if (password.length < 6 || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+        alert("Mot de passe faible. Utilise au moins 6 caractères, une majuscule et un chiffre.");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Envoi...";
+
+      try {
+        const response = await fetch('http://localhost:3000/api/v1/user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ firstName, lastName, email, password })
+        });
+
+        const result = await response.json();
+        alert("Inscription réussie !");
+      } catch (err) {
+        alert("Erreur réseau ou serveur.");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Sign Up";
+      }
+    });
+  </script>
+</body>
+</html>
