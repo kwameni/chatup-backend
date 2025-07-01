@@ -1,0 +1,1 @@
+Considérer uniquement l'archive
